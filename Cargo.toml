@@ -1,19 +1,2 @@
-[package]
-name = "test-host"
-version = "0.1.0"
-authors = ["acorbeau"]
-edition = "2018"
-members = ["lib/cpal"]
-
-[dependencies]
-claxon = "0.4.2"
-vst = {path = "lib/vst-rs"}
-cpal = { path = "lib/cpal" }
-winit = "0.20.0-alpha4"
-log = "^0.4"
-env_logger = "^0.7"
-raw-window-handle = "0.3.1"
-tokio = "=0.2.0-alpha.1"
-failure = "0.1.6"
-sample = "0.10.0"
-generational-arena = "0.2.6"
+[workspace]
+members = ["engine", "host", "libs/cpal" , "libs/vst-rs"]

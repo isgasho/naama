@@ -1,0 +1,16 @@
+[package]
+name = "engine"
+version = "0.1.0"
+authors = ["asyade <zarandifar@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+claxon = "0.4.2"
+vst = { path = "../libs/vst-rs" }
+cpal = { path = "../libs/cpal" }
+log = "^0.4"
+failure = "0.1.6"
+sample = "0.10.0"
+generational-arena = "0.2.6"
