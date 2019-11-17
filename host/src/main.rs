@@ -6,18 +6,16 @@ extern crate winit;
 extern crate failure;
 extern crate engine;
 
+use engine::devices::*;
 use engine::loader::asset::*;
 use engine::prelude::*;
 use engine::supervisor::*;
-use engine::devices::*;
-
 use std::path::Path;
-use std::thread::{self, JoinHandle};
 
 fn main() {
     std::env::set_var("RUST_LOG", "trace");
     std::env::set_var("RUST_BACKTRACE", "full");
-    let log = env_logger::init();
+    env_logger::init();
 
     let media = AudioAsset::from_flac_file(
         std::fs::OpenOptions::new()
@@ -45,14 +43,14 @@ fn main() {
         .linker
         .pipe(media_output, supervisor.plugins[&plug].get_inputs())
         .expect("Pipe flac -> vst");
-    let last = supervisor
+    supervisor
         .linker
         .pipe(
             supervisor.plugins[&plug].get_outputs(),
             supervisor.plugins[&plug2].get_inputs(),
         )
         .expect("Pipe vst -> vst");
-    let last = supervisor
+    supervisor
         .linker
         .pipe(supervisor.plugins[&plug2].get_outputs(), log_input)
         .expect("Pipe vst -> logger");

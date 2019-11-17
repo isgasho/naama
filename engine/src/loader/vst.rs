@@ -1,25 +1,31 @@
-use crate::prelude::*;
-use crate::supervisor::linker::Linker;
+use crate::{prelude::*, supervisor::linker::Linker, devices::VstBufferedDevice};
 use std::{
     ffi::c_void,
     sync::{Arc, RwLock},
 };
 use vst::{
+    api::{self, TimeInfo},
     buffer::AudioBuffer,
     editor::Editor,
-    host::{Host, HostBuffer, PluginInstance, PluginLoader},
+    host::{Host, PluginInstance},
     plugin::{Info, Plugin},
-    api::{self, TimeInfo},
 };
 
+/// Unique id assigned to a vst instance
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 pub struct VstId(u64);
 
+/// VST plugin host
 pub struct VstHost {
     pub time_info: Option<TimeInfo>,
     pub block_size: isize,
 }
 
 impl VstHost {
+    /// Create an empty host
+    ///
+    /// # Parametters
+    /// * `block_size` The default samples block size
     pub fn new(block_size: isize) -> Self {
         Self {
             time_info: None,
@@ -50,64 +56,18 @@ impl Host for VstHost {
     }
 }
 
+/// VST Instance wrapper that contains extra informations like I/O devices index
 pub struct VstPlugin {
-    pub id: u64,
+    /// Unique instance id
+    pub id: VstId,
+    /// VST Basic informations
     info: Info,
+    /// VST Instance
     instance: PluginInstance,
-    inputs: InputIndex,
-    outputs: OutputIndex,
-}
-
-#[derive(Clone)]
-pub struct VstBufferedDevice {
-    id: u64,
-    vst_id: u64,
-    buffer: Vec<Arc<RwLock<Vec<f32>>>>,
-}
-
-impl VstBufferedDevice {
-    pub fn new(size: usize, channels: usize, vst_id: u64) -> Self {
-        let id = crate::supervisor::linker::new_id();
-        info!("VST sample id {}", id);
-        Self {
-            vst_id,
-            id,
-            buffer: vec![Arc::new(RwLock::new(vec![0f32; size])); channels],
-        }
-    }
-}
-
-impl SampleDevice for VstBufferedDevice {
-    fn block_size(&self) -> usize {
-        self.buffer[0].read().unwrap().len()
-    }
-
-    fn nbr_channel(&self) -> usize {
-        self.buffer.len()
-    }
-
-    fn id(&self) -> u64 {
-        self.id
-    }
-
-    fn parent_vst(&self) -> Option<u64> {
-        Some(self.vst_id)
-    }
-}
-
-impl SampleOutput for VstBufferedDevice {
-    fn next(&self, channel: usize) -> Option<std::sync::RwLockReadGuard<Vec<f32>>> {
-        Some(self.buffer[channel].read().unwrap())
-    }
-}
-
-impl SampleInput for VstBufferedDevice {
-    fn next(&mut self, buffer: &[f32], channel: usize) {
-        self.buffer[channel]
-            .write()
-            .unwrap()
-            .copy_from_slice(buffer);
-    }
+    /// Input device (allocated in the linker arena)
+    input: InputIndex,
+    /// Input output (allocated in the linker arena)
+    output: OutputIndex,
 }
 
 impl VstPlugin {
@@ -122,26 +82,26 @@ impl VstPlugin {
         instance.set_sample_rate(sample_rate);
         instance.set_block_size(block_size);
         instance.resume();
-        let id = crate::supervisor::linker::new_id();
+        let id = VstId(crate::supervisor::linker::new_id());
         let virt_device = Box::new(VstBufferedDevice::new(block_size as usize, 2, id));
-        let inputs = linker.register_input(virt_device.clone());
-        let outputs = linker.register_output(virt_device);
+        let input = linker.register_input(virt_device.clone());
+        let output = linker.register_output(virt_device);
         info!("Plugin initialized: {:?}", info);
         Self {
             id,
             info,
             instance,
-            inputs,
-            outputs,
+            input,
+            output,
         }
     }
 
     pub fn get_inputs(&self) -> InputIndex {
-        self.inputs.clone()
+        self.input
     }
 
     pub fn get_outputs(&self) -> OutputIndex {
-        self.outputs.clone()
+        self.output
     }
 
     pub fn load_editor(&mut self, win_handle: *mut c_void) {

@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 claxon = "0.4.2"
 vst = { path = "../libs/vst-rs" }
-cpal = { path = "../libs/cpal" }
+cpal = "0.10.0"
 log = "^0.4"
 failure = "0.1.6"
 sample = "0.10.0"

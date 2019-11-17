@@ -1,2 +1,2 @@
 [workspace]
-members = ["engine", "host", "libs/cpal" , "libs/vst-rs"]
+members = ["engine", "host", "libs/vst-rs"]

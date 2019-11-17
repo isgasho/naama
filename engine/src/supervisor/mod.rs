@@ -14,7 +14,7 @@ pub struct Supervisor {
     pub cpal_loop: cpal::EventLoop,
     pub main_output: SysOutputDevice,
     pub vst_host: Arc<Mutex<VstHost>>,
-    pub plugins: BTreeMap<u64, VstPlugin>,
+    pub plugins: BTreeMap<VstId, VstPlugin>,
 }
 
 impl Supervisor {
@@ -40,7 +40,7 @@ impl Supervisor {
         }
     }
 
-    pub fn load_vst<T: AsRef<Path>>(&mut self, path: T) -> u64 {
+    pub fn load_vst<T: AsRef<Path>>(&mut self, path: T) -> VstId {
         let mut loader = PluginLoader::load(path.as_ref(), self.vst_host.clone()).unwrap();
         let mut instance = loader.instance().unwrap();
         let mut plugin = VstPlugin::init(

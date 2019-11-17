@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use generational_arena::{Arena, Index};
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
@@ -18,15 +19,40 @@ pub enum LinkerError {
     PipeWrongIO,
 }
 
+/// Index of an allocated input device int the linker arena
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd)]
 pub struct InputIndex(Index);
+impl From<Index> for InputIndex {
+    fn from(idx: Index) -> Self {
+        Self(idx)
+    }
+}
+
+/// Index of an allocated output device int the linker arena
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd)]
 pub struct OutputIndex(Index);
+impl From<Index> for OutputIndex {
+    fn from(idx: Index) -> Self {
+        Self(idx)
+    }
+}
+
+/// Index of an allocated pipe of two device int the linker arena
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd)]
 pub struct PipeIndex(Index);
+impl From<Index> for PipeIndex {
+    fn from(idx: Index) -> Self {
+        Self(idx)
+    }
+}
+
+/// Unique identifier of an I/O device
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+pub struct DeviceId(pub u64);
 
 static mut last_id: Option<Arc<RwLock<u64>>> = None;
 
+/// Generate a new unique identifier
 pub fn new_id() -> u64 {
     unsafe {
         if last_id.is_none() {
@@ -38,29 +64,19 @@ pub fn new_id() -> u64 {
     }
 }
 
-impl From<Index> for InputIndex {
-    fn from(idx: Index) -> Self {
-        Self(idx)
-    }
-}
-
-impl From<Index> for OutputIndex {
-    fn from(idx: Index) -> Self {
-        Self(idx)
-    }
-}
-
-impl From<Index> for PipeIndex {
-    fn from(idx: Index) -> Self {
-        Self(idx)
-    }
-}
-
 pub trait SampleDevice {
+    /// Get the sample block size
     fn block_size(&self) -> usize;
+
+    /// Get channels count
     fn nbr_channel(&self) -> usize;
-    fn id(&self) -> u64;
-    fn parent_vst(&self) -> Option<u64> {
+
+    /// Get uniq identifier
+    fn id(&self) -> DeviceId;
+
+    /// If the device was loaded from a VST parent_vst must return his instance id
+    /// otherwise the `process` methode of the vst plugin will not be called
+    fn parent_vst(&self) -> Option<VstId> {
         None
     }
 }
@@ -116,7 +132,7 @@ impl Linker {
         self.pipes.get_mut(idx.0)
     }
 
-    pub fn bind<'a, F: (FnMut(AudioBuffer<f32>, Option<u64>))>(
+    pub fn bind<'a, F: (FnMut(AudioBuffer<f32>, Option<VstId>))>(
         &'a mut self,
         idx: PipeIndex,
         tmp: &mut [&mut [f32]],
@@ -133,15 +149,12 @@ impl Linker {
         let vst = in_ins.parent_vst();
         let out_left = out_ins.next(0).expect("EOF");
         let out_right = out_ins.next(1).expect("EOF");
-        info!("INPUT {:?}", &out_left[0..4]);
         let outputs = &[&out_left[0..out_left.len()], &out_right[0..out_right.len()]];
         let binding = pipe.buffer.bind(outputs, tmp);
         process(binding, vst);
-        info!("OUPUT {:?}", &tmp[0][0..4]);
         in_ins.next(tmp[0], 0);
         in_ins.next(tmp[1], 1);
         let next = self.sequences.get(&idx).map(|e| *e);
-        info!("DONE {} -> {} next {:?}", out_ins.id(), in_ins.id(), &next);
         Ok(next)
     }
 
