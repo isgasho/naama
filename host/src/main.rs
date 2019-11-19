@@ -4,6 +4,7 @@ extern crate raw_window_handle;
 extern crate winit;
 #[macro_use]
 extern crate failure;
+extern crate clap;
 extern crate engine;
 
 use engine::devices::*;
@@ -20,7 +21,7 @@ fn main() {
     let media = AudioAsset::from_flac_file(
         std::fs::OpenOptions::new()
             .read(true)
-            .open("example/sample.flac")
+            .open("examples/assets/sample.flac")
             .unwrap(),
     )
     .expect("Sample");
@@ -33,12 +34,8 @@ fn main() {
         .linker
         .register_input(Box::new(LoggerSample::new(bsize)));
 
-    let plug = supervisor.load_vst(Path::new(
-        "lib/vst-rs/target/debug/examples/gain_effect.dll",
-    ));
-    let plug2 = supervisor.load_vst(Path::new(
-        "lib/vst-rs/target/debug/examples/gain_effect.dll",
-    ));
+    let plug = supervisor.load_vst(Path::new("examples/vst/gain_effect.dll"));
+    let plug2 = supervisor.load_vst(Path::new("examples/vst/gain_effect.dll"));
     let entry = supervisor
         .linker
         .pipe(media_output, supervisor.plugins[&plug].get_inputs())
