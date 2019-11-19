@@ -8,10 +8,16 @@ edition = "2018"
 
 [dependencies]
 claxon = "0.4.2"
-winit = "0.20.0-alpha4"
 log = "^0.4"
 env_logger = "^0.7"
-raw-window-handle = "0.3.1"
 failure = "^0.1"
 engine = { path= "../engine" }
 clap = "^2.33"
+
+[dependencies.gtk]
+version = "0.7.0"
+features = ["v3_16"]
+
+[dependencies.gio]
+version = ""
+features = ["v2_44"]
