@@ -16,8 +16,9 @@ pub struct SysOutputDevice {
 impl SysOutputDevice {
     /// Create a new output device
     ///
-    /// # Parametters
-    /// * `device` The cpal device to write into
+    /// # Parameters
+    ///
+    /// * `device` The CPAL device to write into
     pub fn new(device: cpal::Device) -> Self {
         let id = DeviceId(crate::supervisor::linker::new_id());
         let mut formats_range = device
@@ -63,7 +64,8 @@ pub struct LoggerSample {
 impl LoggerSample {
     /// Create a new logger
     ///
-    /// # Parametters
+    /// # Parameters
+    ///
     /// * `size` size of the sample buffer
     pub fn new(size: usize) -> Self {
         let id = DeviceId(crate::supervisor::linker::new_id());

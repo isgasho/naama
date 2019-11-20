@@ -7,14 +7,14 @@ extern crate engine;
 
 mod gui;
 
-use gtk::{Application, ApplicationWindow, Button};
+use gtk::{BuilderExtManual, Application, ApplicationWindow, Button, WidgetExt};
 
 fn main() {
     gtk::init().expect("Initialize GTK");
     let builder = gui::get_main_window();
-    let window = builder
+    let window: ApplicationWindow = builder
         .get_object("win_host")
-        .expect("Wrong layout: invalide window name");
+        .expect("Wrong layout: invalid window name");
     window.show_all();
     gtk::main();
 }

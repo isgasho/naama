@@ -2,7 +2,7 @@
 A VST host written in `RUST` lang for Windows.
 
 # Prerequisites
-- GTK+
+- GTK+ [http://www.tarnyko.net/repo/gtk3_build_system/gtk+-bundle_3.6.4-20130513_win64.zip](x64 bundle for window)
 - GLib
 - Cario
 

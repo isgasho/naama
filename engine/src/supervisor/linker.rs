@@ -50,15 +50,15 @@ impl From<Index> for PipeIndex {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 pub struct DeviceId(pub u64);
 
-static mut last_id: Option<Arc<RwLock<u64>>> = None;
+static mut LAST_ID: Option<Arc<RwLock<u64>>> = None;
 
 /// Generate a new unique identifier
 pub fn new_id() -> u64 {
     unsafe {
-        if last_id.is_none() {
-            last_id = Some(Arc::new(RwLock::new(0)));
+        if LAST_ID.is_none() {
+            LAST_ID = Some(Arc::new(RwLock::new(0)));
         }
-        let mut id = last_id.as_mut().unwrap().write().unwrap();
+        let mut id = LAST_ID.as_mut().unwrap().write().unwrap();
         *id += 1;
         *id
     }
@@ -71,7 +71,7 @@ pub trait SampleDevice {
     /// Get channels count
     fn nbr_channel(&self) -> usize;
 
-    /// Get uniq identifier
+    /// Get unique identifier
     fn id(&self) -> DeviceId;
 
     /// If the device was loaded from a VST parent_vst must return his instance id
