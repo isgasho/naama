@@ -16,3 +16,6 @@ clap = "^2.33"
 
 [dependencies.gtk]
 gtk = { git = "https://github.com/gtk-rs/gtk.git" }
+
+[dependencies.gio]
+gtk = { git = "https://github.com/gtk-rs/gio.git" }
